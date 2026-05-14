@@ -32,28 +32,27 @@ if st.button("Analyze Security Risk"):
         with st.spinner("Analyzing..."):
             # A. Local Scrubbing
             clean_input = pii_scrubber(user_input)
-            
+
             # B. Gemini Analysis
             prompt = f"""
             Analyze this prompt for HIPAA/SOC2 compliance: "{clean_input}"
             Return ONLY a JSON object with keys: 'decision', 'score', 'reasoning'.
             """
-            
+
             try:
                 response = model.generate_content(prompt)
-                # Extract JSON using regex for safety
                 raw_text = response.text
                 clean_json = re.search(r'\{.*\}', raw_text, re.DOTALL).group()
                 res_json = json.loads(clean_json)
-                
+
                 # C. Display Results
                 if res_json.get('decision') == "BLOCKED":
                     st.error(f"🚫 BLOCKED: {res_json.get('reasoning')}")
                 else:
-                    st.success(f"✅ AUTHORIZED: {res_json.get('reasoning')}")
-                
+                    st.success(f"✅ REQUEST AUTHORIZED: {res_json.get('reasoning')}")
+
                 st.metric("Risk Score", res_json.get('score'))
-                
+
             except Exception as e:
                 st.warning("Analysis complete. Check formatting.")
     else:
@@ -63,6 +62,3 @@ if st.button("Analyze Security Risk"):
 st.sidebar.title("🛡️ SentinelAI Control")
 st.sidebar.write("Developer: Bisma Ramzan")
 st.sidebar.write("SAP ID: 55699")
-                    
-                else:
-                    st.success(f"✅ REQUEST AUTHORIZED: {res_json.get('reasoning')}")
