@@ -61,35 +61,14 @@ if st.button("Analyze Security Risk"):
             'decision', 'score', 'citation', 'reasoning'.
             """
             
-            try:
-                response = model.generate_content(prompt)
-                # Parse the JSON from Gemini
-                # (Note: Use regex or JSON cleaning if Gemini includes markdown ticks)
-                res_json = json.loads(response.text.replace("```json", "").replace("
-```", ""))
+          try:
+                # Cleaner way to extract JSON even if there is extra text
+                raw_text = response.text
+                clean_json = re.search(r'\{.*\}', raw_text, re.DOTALL).group()
+                res_json = json.loads(clean_json)
                 
-                # Step C: UI Display based on Risk
-                if res_json['decision'] == "BLOCKED":
-                    st.error(f"🚫 REQUEST BLOCKED: {res_json['reasoning']}")
+                # UI Display based on Risk
+                if res_json.get('decision') == "BLOCKED":
+                    st.error(f"🚫 REQUEST BLOCKED: {res_json.get('reasoning')}")
                 else:
-                    st.success(f"✅ REQUEST AUTHORIZED: {res_json['reasoning']}")
-                
-                # Security Audit Log
-                st.divider()
-                st.subheader("📋 Security Audit Log")
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Risk Score", res_json['score'], delta_color="inverse")
-                col2.write(f"**Policy Citation:** {res_json['citation']}")
-                col3.write(f"**Timestamp:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                
-            except Exception as e:
-                st.warning("Analysis complete. Risk detected in prompt format.")
-                # Fallback display if JSON parsing fails during demo
-                st.json({"status": "Security Alert", "action": "Manual Review Required"})
-
-    else:
-        st.warning("Please enter a prompt to test.")
-
-# 6. FOOTER
-st.markdown("---")
-st.caption("SentinelAI 2026 | Built for Google AI Studio Hackathon")
+                    st.success(f"✅ REQUEST AUTHORIZED: {res_json.get('reasoning')}")
